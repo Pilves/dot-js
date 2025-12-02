@@ -19,18 +19,56 @@ export function signal(initialValue) {
     return value
   }
 
-  //setter 
+  //setter
   function write(newValue) {
 
-    const nextValue = typeof newValue === "function" ? newValue(value) : newValue  
+    const nextValue = typeof newValue === "function" ? newValue(value) : newValue
     //update if value change
-    if (nextValue /= value) {
+    if (nextValue !== value) {
+      value = nextValue
       subscribers.forEach((fn) => fn())
     }
   }
 
   return [read, write]
+
+ }
+
+/**
+ * create effect which runs when values change
+ * @param {() => void} fn - function which changes
+ */
+export  function effect(fn) {
+  const execute = () => {
+    //activate
+    currentEffect = execute
+    //run 
+    fn()
+    //remove activate
+    currentEffect = null
+  }
+  execute
+  
 }
+
+
+
+
+  /**
+   * create new updating value
+   * @param {() => any} fn - function  which calculates the result
+   9* @returns {()  =>  any} - getter funktsioon
+   */
+  export function computed(fn) {
+    const [value, setValue] = signal(undefined)
+
+    effect(() => {
+      setValue(fn())
+    })
+
+    return getter
+    
+  }
 
 
 
