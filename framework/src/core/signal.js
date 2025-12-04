@@ -47,7 +47,7 @@ export  function effect(fn) {
     //remove activate
     currentEffect = null
   }
-  execute
+  execute()
   
 }
 
@@ -57,7 +57,7 @@ export  function effect(fn) {
   /**
    * create new updating value
    * @param {() => any} fn - function  which calculates the result
-   9* @returns {()  =>  any} - getter funktsioon
+   * @returns {()  =>  any} - getter funktsioon
    */
   export function computed(fn) {
     const [value, setValue] = signal(undefined)
@@ -66,7 +66,7 @@ export  function effect(fn) {
       setValue(fn())
     })
 
-    return getter
+    return value
     
   }
 
