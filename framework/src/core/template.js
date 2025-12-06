@@ -8,7 +8,7 @@ import { effect } from "./signal.js";
  */
 export function html(strings, ...values) {
   //create markers for each value
-  const markers = values.map((_, i) => `<!--dot-${i}-->`)
+//  const markers = values.map((_, i) => `<!--dot-${i}-->`)
   
   // build the string 
   let htmlString = ""
@@ -16,7 +16,16 @@ export function html(strings, ...values) {
   strings.forEach((str, i) => {
     htmlString += str 
     if (i < values.length) {
-      htmlString  += markers[i]
+      //check if its an attribute
+      const isInAttribute = isInsideAttribute(htmlString)
+
+      if (isInAttribute) {
+        //use string marker for attributes
+        htmlString += `__dot_attr_${i}__`
+      } else {
+        // comment marker for content
+        htmlString += `<!--dot-${i}-->`
+      }
     }
   })
 
@@ -36,6 +45,14 @@ export function html(strings, ...values) {
     return content.firstChild
   }
   return content
+}
+
+function isInsideAttribute(html) {
+  //find last < and >
+  const lastOpen = html.lastIndexOf('<');
+  const lastClose = html.lastIndexOf('>');
+  // attribute if <came after >
+  return lastOpen > lastClose
 }
 
 //process DOM and replace markers with content 
