@@ -34,7 +34,7 @@ document.body.appendChild(profile)
 
 //buttons to test  
 const  controls = html`
-  <div class="card">
+  <div class="ca88rd">
     <button  id="btn-name">Change name</button>
     <button id="btn-age">Change age</button>
   </div>
@@ -77,11 +77,40 @@ document.getElementById("btn-a").onclick = () => setA((n) => n + 1)
 
 document.getElementById("btn-b").onclick = () => setB((n) => n + 1)
 
+const btn = html`<button onclick=${() => console.log("clicked")}>test</button>`
+document.body.appendChild(btn)
 
-console.log("TESTS LOADED")
 
+console.log("TEST 4: reactive attributes")
+const [active, setActive] = signal(false)
 
+const div = html`<div class=${() => active() ? 'active' : 'inactive'}>Reactive class</div>`
+document.body.appendChild(div)
 
+console.log("initial class: ", div.className)
+
+setActive(true)
+console.log("after true: ", div.className)
+setActive(false)
+console.log("after false: ", div.className)
+
+console.log("\nTEST 5: style binding")
+
+// Static style object
+const styledDiv = html`<div style=${{ color: 'red', fontSize: '24px' }}>Red Styled Text</div>`
+document.body.appendChild(styledDiv)
+console.log("Style attribute:", styledDiv.getAttribute("style"))
+
+// Reactive style
+const [visible, setVisible] = signal(true)
+const fadingDiv = html`<div style=${() => ({ opacity: visible() ? 1 : 0.2, padding: '10px', background: 'yellow' })}>Fading Box</div>`
+document.body.appendChild(fadingDiv)
+
+console.log("Initial opacity:", fadingDiv.style.opacity)
+setVisible(false)
+console.log("After setVisible(false):", fadingDiv.style.opacity)
+
+console.log("\nTESTS LOADED")
 
 
 

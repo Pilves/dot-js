@@ -39,6 +39,7 @@ export function html(strings, ...values) {
 
   //find  and replace markers
   processMarkers(content, values)
+  processAttributes(content, values)
   
   // return one element or fragment
   if (content.childNodes.length === 1) {
@@ -53,6 +54,87 @@ function isInsideAttribute(html) {
   const lastClose = html.lastIndexOf('>');
   // attribute if <came after >
   return lastOpen > lastClose
+}
+
+/**
+ * convert style object to CSS string 
+ * @param {Object} styleObj  - { color: "red", fontSize: '14px'}
+ * @returns {string} - "color: red; font-size: 14px;"
+ */
+function styleObjectToString(styleObj) {
+  if (!styleObj || typeof styleObj !== 'object') {
+    return String(styleObj || '')
+  }
+  return  Object.entries(styleObj).map(([key, value]) => {
+    //convert camelCase to kebab-case: fontSize -> font-size
+    const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase()
+    return `${cssKey}:  ${value}`
+  })
+  .join('; ')
+}
+
+//process attirbutes
+function processAttributes(root, values) {
+  const walker = document.createTreeWalker(
+    root,
+    NodeFilter.SHOW_ELEMENT,
+    null
+  )
+  const nodesToProcess = []
+
+  //find all elements
+  while (walker.nextNode()) { 
+    const element = walker.currentNode
+  
+    //loop through element attributes
+    for (let i = 0; i < element.attributes.length; i++) {
+      const attr = element.attributes[i];
+
+      //check if attribute has marker
+      const match = attr.value.match(/__dot_attr_(\d+)__/)
+
+      if (match) {
+        const index  = parseInt(match[1])
+        const value = values[index]
+        
+        //check if its an event attribute
+        if (attr.name.startsWith("on")) {
+          // get  event name 
+          const eventName = attr.name.slice(2);
+          //add the real event listener
+          element.addEventListener(eventName, value)
+          //remove placeholder
+          element.removeAttribute(attr.name)
+        } else if (attr.name === 'style') {
+          element.removeAttribute(attr.name)
+          //reactive  style binding
+          if (typeof value === "function") {
+            effect(() => {
+            const result =  value()
+            element.setAttribute("style", styleObjectToString(result))
+            })   
+          } else {
+            //static style object
+            element.setAttribute("style", styleObjectToString(value))
+          }
+          
+        } else {
+          //regular attribute
+          //remove placeholder
+          element.removeAttribute(attr.name)
+          if (typeof value === "function") {
+            // update attribute when signal changes
+            effect(() => {
+              const result = value()
+              element.setAttribute(attr.name, result)
+            })
+          } else {
+            element.setAttribute(attr.name, value)
+          }
+        }
+      }
+    }
+  }
 }
 
 //process DOM and replace markers with content 
