@@ -34,7 +34,7 @@ document.body.appendChild(profile)
 
 //buttons to test  
 const  controls = html`
-  <div class="ca88rd">
+  <div class="card">
     <button  id="btn-name">Change name</button>
     <button id="btn-age">Change age</button>
   </div>
