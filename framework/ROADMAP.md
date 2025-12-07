@@ -11,11 +11,11 @@
 - [x] Reactive text bindings with `${() => value()}`
 
 ### Remaining
-- [ ] Event handling
-- [ ] Attribute binding
-- [ ] Style binding
-- [ ] Component architecture
-- [ ] Routing
+- [x] Event handling
+- [x] Attribute binding
+- [x] Style binding
+- [x] Component architecture (mount, function components, children)
+- [x] Routing (hash router, navigate, route params)
 - [ ] Form handling
 - [ ] HTTP requests
 - [ ] Performance optimizations

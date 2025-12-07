@@ -1,5 +1,11 @@
 import { signal, effect, computed } from "./signal.js"
 import { html } from "./template.js"
+import { mount } from "./component.js"
+import  {createRouter} from "./router.js"
+
+
+const app = html`<div>Hello from mount!</div>`
+mount(app, document.body)
 
 console.log("TEST 1: Reactive")
 const [count, setCount] =  signal(0)
@@ -10,7 +16,7 @@ const counter = html`
   </div>
 `
 
-document.body.appendChild(counter)
+mount(counter, document.body)
 
 //change  value every second
 setInterval(() => {
@@ -30,7 +36,7 @@ const profile = html`
     </div>
 `
 
-document.body.appendChild(profile)
+mount(profile, document.body)
 
 //buttons to test  
 const  controls = html`
@@ -39,7 +45,7 @@ const  controls = html`
     <button id="btn-age">Change age</button>
   </div>
 `
-document.body.appendChild(controls)
+mount(controls, document.body)
 
 document.getElementById("btn-name").onclick = () => {
   const names = ["kati", "malle", "triin",  "Toomans", "juri"]
@@ -62,7 +68,7 @@ const math = html`
   </div>
 `
 
-document.body.appendChild(math)
+mount(math, document.body)
 
 const mathControls = html`
   <div class="card">
@@ -71,21 +77,21 @@ const mathControls = html`
   </div>
 `
 
-document.body.appendChild(mathControls)
+mount(mathControls, document.body)
 
 document.getElementById("btn-a").onclick = () => setA((n) => n + 1)
 
 document.getElementById("btn-b").onclick = () => setB((n) => n + 1)
 
 const btn = html`<button onclick=${() => console.log("clicked")}>test</button>`
-document.body.appendChild(btn)
+mount(btn, document.body)
 
 
 console.log("TEST 4: reactive attributes")
 const [active, setActive] = signal(false)
 
 const div = html`<div class=${() => active() ? 'active' : 'inactive'}>Reactive class</div>`
-document.body.appendChild(div)
+mount(div, document.body)
 
 console.log("initial class: ", div.className)
 
@@ -98,22 +104,70 @@ console.log("\nTEST 5: style binding")
 
 // Static style object
 const styledDiv = html`<div style=${{ color: 'red', fontSize: '24px' }}>Red Styled Text</div>`
-document.body.appendChild(styledDiv)
+mount(styledDiv, document.body)
 console.log("Style attribute:", styledDiv.getAttribute("style"))
 
 // Reactive style
 const [visible, setVisible] = signal(true)
 const fadingDiv = html`<div style=${() => ({ opacity: visible() ? 1 : 0.2, padding: '10px', background: 'yellow' })}>Fading Box</div>`
-document.body.appendChild(fadingDiv)
+mount(fadingDiv, document.body)
 
 console.log("Initial opacity:", fadingDiv.style.opacity)
 setVisible(false)
 console.log("After setVisible(false):", fadingDiv.style.opacity)
 
+function Card({ title, children }) {
+  return html`
+    <div class="card">
+      <h2>${title}<h2>
+      <div class="card-body">${children}</div>
+    </div>
+  `
+}
+
+const inner = html`<p>test</p>`
+const outer = html`<div class="wrapper">${inner}</div>`
+mount(outer, document.body)
+
+const myCard = Card({
+  title: "hi",
+  children: html`<p>tsts</p>`
+}) 
+mount(myCard, document.body)
 console.log("\nTESTS LOADED")
 
+function HomePage() {
+  return html`<h1>Home</h1>`
+}
+
+function AboutPage() {
+  return html`<h1>about</h1>`
+}
+
+function UserPage({ id }) {
+  return html`<h1>User ${id}</h1>`
+}
+
+const router = createRouter({
+  '/': HomePage,
+  '/about':  AboutPage,
+  '/user/:id': UserPage
+})
 
 
+console.log(router.current())
+
+router.navigate('/about')
+console.log(router.current())
+
+router.navigate('/user/234')
+
+setTimeout(() => {
+ const match  =  router.current() 
+  console.log(match.component)
+  console.log(match.params)
+
+}, 0);
 
 
 
