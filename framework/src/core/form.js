@@ -29,8 +29,18 @@ export  function bindRadio([get, set]) {
   return {
     value: radioValue,
     checked: () =>  get() ===  radioValue,
-    
+    onchange: (e) => {
+      if (e.target.checked) set(radioValue)
+    }    
   }
 }
 
-
+export function bindNumber([get, set]) {
+  return {
+    value: () => get(),
+    oninput: (e) => {
+      const num = parseFloat(e.target.value)
+      set(isNaN(num) ? 0 : num)
+    }
+  }
+}
