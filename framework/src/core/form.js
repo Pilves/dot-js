@@ -25,7 +25,7 @@ export function bindSelect([get, set]) {
   }
 }
 
-export  function bindRadio([get, set]) {
+export  function bindRadio([get, set], radioValue) {
   return {
     value: radioValue,
     checked: () =>  get() ===  radioValue,
@@ -44,3 +44,46 @@ export function bindNumber([get, set]) {
     }
   }
 }
+
+export function handleForm(callback) {
+  return {
+    onsubmit: (e) => {
+      e.preventDefault()
+      const data = new FormData(e.target)
+      callback(data)
+    }
+  }
+}
+
+export function required(value) {
+  if (value.trim()){
+    return null
+  }
+  return "error"
+}
+
+export function minLength(value, min) {
+  if (value.trim().length < min) {
+    return "value is too short"
+  }
+  return null
+}
+
+export function maxLength(value, max) {
+  if (value.trim().length > max) {
+    return "value is too long"
+  }
+  return null
+}
+
+export function email(value) {
+  if (value.includes("@")) {
+    if (value.indexOf('.') > value.indexOf("@")){
+      return null
+    }
+    return "you need to have domain ending"
+  }
+  return "you need to have an @"
+}
+
+
