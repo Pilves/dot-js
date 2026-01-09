@@ -1,0 +1,16 @@
+{
+  "name": "dot-js-framework",
+  "version": "0.1.0",
+  "description": "A minimal reactive JavaScript framework",
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-vm-modules src/core/tests/run-all.js",
+    "test:signal": "node src/core/tests/signal.test.js",
+    "test:template": "node src/core/tests/template.test.js",
+    "test:router": "node src/core/tests/router.test.js",
+    "test:list": "node src/core/tests/list.test.js"
+  },
+  "devDependencies": {
+    "happy-dom": "^15.0.0"
+  }
+}
