@@ -26,5 +26,11 @@ export {
   email
 } from './core/form.js'
 
+// HTTP utilities
+export { http, useAsync, HttpError } from './core/http.js'
+
+// List rendering
+export { list, each } from './core/list.js'
+
 // Virtual list for efficient rendering of large lists
 export { createVirtualList } from './core/virtual-list.js'

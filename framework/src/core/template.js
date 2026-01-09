@@ -1,30 +1,51 @@
 import { effect } from "./signal.js";
 
 /**
+ * Safe URL protocols for href, src, and similar attributes
+ */
+const SAFE_URL_PROTOCOLS = ['http:', 'https:', 'mailto:', 'tel:']
+const URL_ATTRS = ['href', 'src', 'action', 'formaction', 'xlink:href']
+
+/**
+ * Sanitize URLs to prevent javascript: and data: protocol attacks
+ * @param {string} url - The URL to sanitize
+ * @returns {string} - Safe URL or 'about:blank' if unsafe
+ */
+function sanitizeUrl(url) {
+  if (!url || typeof url !== 'string') return url
+  const trimmed = url.trim().toLowerCase()
+  if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:')) {
+    console.warn('Blocked potentially unsafe URL:', url)
+    return 'about:blank'
+  }
+  return url
+}
+
+/**
  * Tagged template
- * @param {TemplateStringsArray} strings 
- * @param {...any} values 
+ * @param {TemplateStringsArray} strings
+ * @param {...any} values
  * @returns {Node}
  */
 export function html(strings, ...values) {
-  //create markers for each value
-//  const markers = values.map((_, i) => `<!--dot-${i}-->`)
-  
-  // build the string 
+  // Generate unique marker ID to prevent spoofing
+  const markerId = Math.random().toString(36).slice(2, 10)
+
+  // build the string
   let htmlString = ""
 
   strings.forEach((str, i) => {
-    htmlString += str 
+    htmlString += str
     if (i < values.length) {
       //check if its an attribute
       const isInAttribute = isInsideAttribute(htmlString)
 
       if (isInAttribute) {
         //use string marker for attributes
-        htmlString += `__dot_attr_${i}__`
+        htmlString += `__dot_${markerId}_attr_${i}__`
       } else {
         // comment marker for content
-        htmlString += `<!--dot-${i}-->`
+        htmlString += `<!--dot-${markerId}-${i}-->`
       }
     }
   })
@@ -37,10 +58,9 @@ export function html(strings, ...values) {
   //return content
   const content = template.content.cloneNode(true)
 
-  //find  and replace markers
-  processMarkers(content, values)
-  processAttributes(content, values)
-  
+  //find  and replace markers with combined TreeWalker
+  processMarkersAndAttributes(content, values, markerId)
+
   // return one element or fragment
   if (content.childNodes.length === 1) {
     return content.firstChild
@@ -57,7 +77,7 @@ function isInsideAttribute(html) {
 }
 
 /**
- * convert style object to CSS string 
+ * convert style object to CSS string
  * @param {Object} styleObj  - { color: "red", fontSize: '14px'}
  * @returns {string} - "color: red; font-size: 14px;"
  */
@@ -73,33 +93,61 @@ function styleObjectToString(styleObj) {
   .join('; ')
 }
 
-//process attirbutes
-function processAttributes(root, values) {
+/**
+ * Combined TreeWalker for processing both comment markers and attributes
+ * @param {Node} root - Root node to traverse
+ * @param {Array} values - Template values
+ * @param {string} markerId - Unique marker ID for this template
+ */
+function processMarkersAndAttributes(root, values, markerId) {
   const walker = document.createTreeWalker(
     root,
-    NodeFilter.SHOW_ELEMENT,
+    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_COMMENT,
     null
   )
-  const nodesToProcess = []
 
-  //find all elements
-  while (walker.nextNode()) { 
-    const element = walker.currentNode
-  
-    //loop through element attributes
-    for (let i = 0; i < element.attributes.length; i++) {
-      const attr = element.attributes[i];
+  const commentNodesToProcess = []
+  const attrPattern = new RegExp(`__dot_${markerId}_attr_(\\d+)__`)
+  const commentPattern = new RegExp(`^dot-${markerId}-(\\d+)$`)
 
-      //check if attribute has marker
-      const match = attr.value.match(/__dot_attr_(\d+)__/)
+  // First pass: collect all nodes to process
+  while (walker.nextNode()) {
+    const node = walker.currentNode
 
+    if (node.nodeType === Node.COMMENT_NODE) {
+      // Process comment markers
+      const match = node.textContent.match(commentPattern)
       if (match) {
-        const index  = parseInt(match[1])
+        const index = parseInt(match[1])
+        commentNodesToProcess.push({ node, index })
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // Process attributes
+      const element = node
+
+      // Collect attributes to process (iterate backwards to safely remove)
+      const attrsToProcess = []
+      for (let i = 0; i < element.attributes.length; i++) {
+        const attr = element.attributes[i]
+        const match = attr.value.match(attrPattern)
+        if (match) {
+          attrsToProcess.push({ attr, index: parseInt(match[1]) })
+        }
+      }
+
+      // Process collected attributes
+      for (const { attr, index } of attrsToProcess) {
         const value = values[index]
-        
+
         //check if its an event attribute
         if (attr.name.startsWith("on")) {
-          // get  event name 
+          // Type check: event handlers must be functions
+          if (typeof value !== 'function') {
+            console.warn(`Event handler for ${attr.name} must be a function, got ${typeof value}`)
+            element.removeAttribute(attr.name)
+            continue
+          }
+          // get  event name
           const eventName = attr.name.slice(2);
           //add the real event listener
           element.addEventListener(eventName, value)
@@ -110,14 +158,24 @@ function processAttributes(root, values) {
           //reactive  style binding
           if (typeof value === "function") {
             effect(() => {
-            const result =  value()
-            element.setAttribute("style", styleObjectToString(result))
-            })   
+              const result = value()
+              element.setAttribute("style", styleObjectToString(result))
+            })
           } else {
             //static style object
             element.setAttribute("style", styleObjectToString(value))
           }
-          
+        } else if (URL_ATTRS.includes(attr.name)) {
+          // URL attribute - sanitize for security
+          element.removeAttribute(attr.name)
+          if (typeof value === "function") {
+            effect(() => {
+              const result = value()
+              element.setAttribute(attr.name, sanitizeUrl(result))
+            })
+          } else {
+            element.setAttribute(attr.name, sanitizeUrl(value))
+          }
         } else {
           //regular attribute
           //remove placeholder
@@ -135,39 +193,17 @@ function processAttributes(root, values) {
       }
     }
   }
-}
 
-//process DOM and replace markers with content 
-function processMarkers(root, values) {
-  const walker = document.createTreeWalker(
-    root,
-    NodeFilter.SHOW_COMMENT,
-    null
-  )
-
-  const nodesToProcess = []
-
-  //find all comments
-  while (walker.nextNode()) {
-    const node = walker.currentNode 
-    const match = node.textContent.match(/^dot-(\d+)$/)
-
-    if (match) {
-      const index = parseInt(match[1])
-      nodesToProcess.push({node, index})
-    }
-  }
-
-  // process every marker 
-  nodesToProcess.forEach(({ node, index }) => {
+  // Second pass: replace comment markers with content
+  commentNodesToProcess.forEach(({ node, index }) => {
     const value = values[index]
-    replaceMarker(node,  value)
+    replaceMarker(node, value)
   })
 }
 
 /**
  * replace marker with   content
- */ 
+ */
 function replaceMarker(markerNode,  value) {
   const parent  = markerNode.parentNode
 
@@ -185,7 +221,7 @@ function replaceMarker(markerNode,  value) {
     // if DOM node - add
     parent.replaceChild(value, markerNode)
   } else if (Array.isArray(value)) {
-    // array add all elements 
+    // array add all elements
     const fragment = document.createDocumentFragment()
     value.forEach((item) => {
       if (item instanceof Node ) {
@@ -202,7 +238,3 @@ function replaceMarker(markerNode,  value) {
   }
 
 }
-
-
-
-
