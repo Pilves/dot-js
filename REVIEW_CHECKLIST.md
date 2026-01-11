@@ -66,15 +66,15 @@ The todo app (`example/`) demonstrates:
 
 | Requirement | Status | Notes |
 |-------------|--------|-------|
-| Stores and updates application state between sessions | ⚠️ PARTIAL | State is reactive during session; no built-in persistence (localStorage not implemented) |
+| Stores and updates application state between sessions | ✅ PASS | `createPersistedSignal()` provides localStorage persistence |
 | State can be shared between elements | ✅ PASS | `store.js` exports signals imported by multiple components |
 | State can be shared between pages | ✅ PASS | Same signals persist across route changes (`filter`, `todos`) |
 
-**Note:** The checklist says "between sessions" which typically means persistence. The framework does NOT include built-in localStorage/session persistence. However, the `effect()` function could be used to implement this easily:
-```js
-effect(() => localStorage.setItem('todos', JSON.stringify(todos())))
-```
-This is shown in `docs/best-practices.md` line 158.
+**Persistence feature (`signal.js`):**
+- `createPersistedSignal(key, defaultValue)` - Signal that auto-saves to localStorage
+- Automatic JSON serialization/deserialization
+- Graceful fallback when localStorage unavailable
+- Example app uses this for todo persistence
 
 ---
 
@@ -241,14 +241,14 @@ The project is a framework because it:
 
 ## Summary
 
-### Mandatory Requirements: 15/16 PASS (1 Partial)
+### Mandatory Requirements: 16/16 PASS
 
 | Category | Status |
 |----------|--------|
 | Repository Structure | ✅ 2/2 |
 | Documentation | ✅ 6/6 |
 | Example Project | ✅ 3/3 |
-| State Management | ⚠️ 2/3 (session persistence not built-in) |
+| State Management | ✅ 3/3 |
 | Routing | ✅ 2/2 |
 | Elements & Components | ✅ 4/4 |
 | User Input & Forms | ✅ 1/1 |
@@ -268,9 +268,9 @@ The project is a framework because it:
 
 ### Mandatory Fixes Required
 
-1. **State Persistence (Session Storage)**
-   - Add built-in persistence helpers or document the pattern more prominently
-   - Example: `createPersistedSignal(key, initialValue)`
+1. ~~**State Persistence (Session Storage)**~~ ✅ FIXED
+   - `createPersistedSignal()` now available in `signal.js`
+   - Example app updated to persist todos
 
 2. **Event Delegation API** (Optional - current implementation works)
    - Consider adding a `delegate()` helper for parent-level event handling

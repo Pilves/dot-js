@@ -41,6 +41,46 @@ setTodos(list => [...list, newTodo])
 
 ---
 
+## PERSISTED SIGNALS
+
+### DO: Use persisted signals for user preferences
+
+```js
+// theme, language, sidebar state - persist across sessions
+const [theme, setTheme] = createPersistedSignal('theme', 'light')
+const [sidebarOpen, setSidebarOpen] = createPersistedSignal('sidebar', true)
+```
+
+### DO: Use regular signals for temporary UI state
+
+```js
+// modal open, dropdown expanded, hover state - no need to persist
+const [isOpen, setIsOpen] = signal(false)
+const [hoveredId, setHoveredId] = signal(null)
+```
+
+### DO NOT: Use persisted signals for sensitive data
+
+```js
+// wrong - tokens and passwords should not be in localStorage
+const [token, setToken] = createPersistedSignal('auth_token', null)
+
+// correct - use regular signals and secure storage methods
+const [token, setToken] = signal(null)
+```
+
+### DO NOT: Use persisted signals for frequently changing values
+
+```js
+// wrong - writing to localStorage on every change is wasteful
+const [scrollPosition, setScrollPosition] = createPersistedSignal('scroll', 0)
+
+// correct - use regular signal for high-frequency updates
+const [scrollPosition, setScrollPosition] = signal(0)
+```
+
+---
+
 ## COMPONENTS
 
 ### DO: Keep components small and focused

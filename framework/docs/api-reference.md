@@ -56,6 +56,30 @@ double() // always 2x count
 
 ---
 
+### createPersistedSignal(key, defaultValue)
+
+Create reactive state that persists to localStorage.
+
+```js
+import { createPersistedSignal } from './core/signal.js'
+
+const [theme, setTheme] = createPersistedSignal('theme', 'light')
+
+theme()              // read: 'light' (or saved value from localStorage)
+setTheme('dark')     // write: 'dark' (also saves to localStorage)
+setTheme(t => t === 'dark' ? 'light' : 'dark') // update with function
+```
+
+The value is automatically saved to localStorage whenever it changes, and restored when the page loads.
+
+**Parameters:**
+- `key` - string key used to store the value in localStorage
+- `defaultValue` - initial value if no saved value exists
+
+**Returns:** `[getter, setter]`
+
+---
+
 ## TEMPLATE
 
 ### html\`...\`

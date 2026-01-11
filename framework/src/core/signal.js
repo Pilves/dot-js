@@ -118,3 +118,89 @@ export function computed(fn) {
 
   return value
 }
+
+/**
+ * Check if localStorage is available
+ * Handles cases where localStorage is disabled, in private browsing, or unavailable
+ * @returns {boolean} - Whether localStorage is available
+ */
+function isLocalStorageAvailable() {
+  try {
+    const testKey = "__dot_js_storage_test__"
+    window.localStorage.setItem(testKey, testKey)
+    window.localStorage.removeItem(testKey)
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
+/**
+ * Create a reactive signal that persists to localStorage
+ * @param {string} key - The localStorage key to use for persistence
+ * @param {any} defaultValue - Default value if no stored value exists
+ * @returns {[() => any, (newValue: any) => void]} - [getter, setter]
+ */
+export function createPersistedSignal(key, defaultValue) {
+  const storageAvailable = isLocalStorageAvailable()
+
+  /**
+   * Load initial value from localStorage
+   * Falls back to defaultValue if not found or on error
+   */
+  function loadInitialValue() {
+    if (!storageAvailable) {
+      return defaultValue
+    }
+
+    try {
+      const stored = window.localStorage.getItem(key)
+      if (stored === null) {
+        return defaultValue
+      }
+      return JSON.parse(stored)
+    } catch (e) {
+      // JSON parse error or other issue, use default
+      console.warn(`Failed to load persisted signal "${key}":`, e)
+      return defaultValue
+    }
+  }
+
+  /**
+   * Save value to localStorage
+   * Silently fails if localStorage is unavailable
+   */
+  function saveToStorage(value) {
+    if (!storageAvailable) {
+      return
+    }
+
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value))
+    } catch (e) {
+      // Quota exceeded or other storage error
+      console.warn(`Failed to persist signal "${key}":`, e)
+    }
+  }
+
+  // Create the underlying signal with loaded value
+  const [read, write] = signal(loadInitialValue())
+
+  /**
+   * Wrapped setter that also persists to localStorage
+   * Accepts either a value or an updater function
+   */
+  function persistedWrite(newValue) {
+    // Get the current value for updater functions
+    const currentValue = read()
+    const nextValue = typeof newValue === "function" ? newValue(currentValue) : newValue
+
+    // Save to storage before updating signal
+    saveToStorage(nextValue)
+
+    // Update the underlying signal
+    write(nextValue)
+  }
+
+  return [read, persistedWrite]
+}

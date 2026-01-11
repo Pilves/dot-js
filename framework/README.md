@@ -62,6 +62,7 @@ mount(App(), document.getElementById('root'))
 
 **Reactivity**
 - `signal(value)` — reactive state
+- `createPersistedSignal(key, value)` — reactive state with localStorage persistence
 - `effect(fn)` — run on dependency change
 - `computed(fn)` — derived values
 

@@ -2,17 +2,19 @@
  * Shared state store using signals
  * Demonstrates: signal, computed
  */
-import { signal, computed } from '../framework/src/core/signal.js'
+import { signal, computed, createPersistedSignal } from '../framework/src/core/signal.js'
 
 // Todo items signal - array of { id, text, completed }
-const [todos, setTodos] = signal([
-  { id: 1, text: 'Learn the framework', completed: true },
-  { id: 2, text: 'Build a todo app', completed: false },
-  { id: 3, text: 'Master reactivity', completed: false }
-])
+// Uses persisted signal to save todos across browser sessions
+const [todos, setTodos] = createPersistedSignal('dot-js-todos', [])
 
-// Next ID for new todos
-let nextId = 4
+// Next ID for new todos - calculated from existing todos
+const getNextId = () => {
+  const currentTodos = todos()
+  return currentTodos.length > 0
+    ? Math.max(...currentTodos.map(t => t.id)) + 1
+    : 1
+}
 
 // Current filter signal - 'all' | 'active' | 'completed'
 const [filter, setFilter] = signal('all')
@@ -51,7 +53,7 @@ const totalCount = computed(() => {
 function addTodo(text) {
   if (text.trim()) {
     setTodos(current => [...current, {
-      id: nextId++,
+      id: getNextId(),
       text: text.trim(),
       completed: false
     }])
