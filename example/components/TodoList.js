@@ -1,27 +1,19 @@
-/**
- * TodoList component
- * Demonstrates: component composition, rendering arrays
- */
 import { html } from '../../framework/src/core/template.js'
 import { filteredTodos } from '../store.js'
 import { TodoItem } from './TodoItem.js'
+import { list } from '../../framework/src/core/list.js'
 
 export function TodoList() {
-  // Get the current filtered todos and map to TodoItem components
-  const todoItems = filteredTodos().map(todo => TodoItem(todo))
-
-  // Show empty state if no todos
-  if (todoItems.length === 0) {
-    return html`
-      <div class="empty-state">
-        <p>No todos to show</p>
-      </div>
-    `
-  }
+  // Check if there are any todos to show
+  const hasTodos = () => filteredTodos().length > 0
 
   return html`
-    <ul class="todo-list">
-      ${todoItems}
+    <div class="empty-state" style="display: ${() => hasTodos() ? 'none' : 'block'}">
+      <p>No todos to show</p>
+    </div>
+
+    <ul class="todo-list" style="display: ${() => hasTodos() ? 'block' : 'none'}">
+      ${list(filteredTodos, todo => todo.id, TodoItem)}
     </ul>
   `
 }

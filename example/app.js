@@ -53,17 +53,17 @@ function App() {
 function render() {
   const container = document.getElementById('app')
 
-  // Effect that re-renders when any signal changes
+  // Effect that handles routing (sets filter based on hash)
   effect(() => {
-    // Execute current route handler to set filter
     const route = router.current()
     if (route && route.component) {
       route.component()
     }
-
-    // Re-render the app
-    mount(App(), container)
   })
+
+  // Mount the app once
+  // Reactivity is now handled globally within components
+  mount(App(), container)
 }
 
 // Start the app when DOM is ready
