@@ -87,7 +87,7 @@ mount(App(), document.getElementById('root'))
 - form submission handling
 
 **HTTP**
-- `get()` `post()` `put()` `del()`
+- `http.get()` `http.post()` `http.put()` `http.patch()` `http.delete()`
 - `useAsync()` — reactive loading/error/data state
 
 **Performance**

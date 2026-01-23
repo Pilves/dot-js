@@ -23,6 +23,7 @@ your-project/
         form.js
         list.js
         virtual-list.js
+        events.js
         utils.js
   app.js
   index.html

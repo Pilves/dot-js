@@ -140,6 +140,8 @@ core/
   http.js        - fetch wrapper and async state
   list.js        - keyed list rendering
   virtual-list.js - virtual scrolling
+  events.js      - event delegation utilities
+  utils.js       - utility functions (generateId, conditionalClass)
 ```
 
 Each file does one thing. Import what you need. Leave what you do not.

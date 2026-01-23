@@ -92,8 +92,18 @@ export function createRouter(routes) {
    */
   function current() {
     const currentPath = path()
+    let wildcardRoute = null
 
     for (const pattern in routes) {
+      // Handle wildcard pattern as catch-all (check it last)
+      if (pattern === '*') {
+        wildcardRoute = {
+          component: routes[pattern],
+          params: {}
+        }
+        continue
+      }
+
       const params = matchRoute(pattern, currentPath)
       if (params !== null) {
         return {
@@ -102,7 +112,9 @@ export function createRouter(routes) {
         }
       }
     }
-    return null
+
+    // Return wildcard route if no other matches found
+    return wildcardRoute
   }
 
   /**

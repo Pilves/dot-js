@@ -334,7 +334,7 @@ html`<input ...${bind([name, setName])} />`
 ### DO: Handle all states
 
 ```js
-const { data, loading, error } = useAsync(() => get('/api/data'))
+const { data, loading, error } = useAsync(() => http.get('/api/data'))
 
 // always handle loading
 if (loading()) return html`<p>loading...</p>`
@@ -353,11 +353,11 @@ return html`<ul>${data().map(item => html`<li>${item}</li>`)}</ul>`
 
 ```js
 // wrong - silent failure
-const data = await get('/api/data')
+const data = await http.get('/api/data')
 
 // correct - handle it
 try {
-  const data = await get('/api/data')
+  const data = await http.get('/api/data')
 } catch (err) {
   showError(err.message)
 }

@@ -234,7 +234,7 @@ import { mount } from './core/component.js'
 mount(App(), document.getElementById('root'))
 ```
 
-Clears the container first. Returns the mounted component.
+Clears the container first.
 
 ---
 
@@ -572,11 +572,12 @@ return html`<ul>${() => data().map(u => html`<li>${u.name}</li>`)}</ul>`
 refetch()
 ```
 
-**Returns:** `{ data, loading, error, refetch }`
+**Returns:** `{ data, loading, error, refetch, abort }`
 - `data` - signal getter for response data
 - `loading` - signal getter for loading state
 - `error` - signal getter for error state
 - `refetch` - function to re-run the async operation
+- `abort` - function to cancel the current request
 
 ---
 
@@ -607,7 +608,7 @@ list(
 
 ### each(signalOrArray, renderFn)
 
-Simplified keyed list. Uses `item.id` as key.
+Simplified keyed list. Uses `item.id` as key, or the item itself if `id` is not present.
 
 ```js
 import { each } from './core/list.js'
@@ -651,6 +652,7 @@ createVirtualList({
 - `scrollToIndex(index)` - scroll to specific item
 - `getVisibleRange()` - get `{ startIndex, endIndex }`
 - `refresh()` - force re-render
+- `destroy()` - remove scroll listener and clean up
 
 ---
 
