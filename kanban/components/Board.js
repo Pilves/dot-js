@@ -4,7 +4,7 @@
  */
 import { html } from '../../framework/src/core/template.js'
 import { effect } from '../../framework/src/core/signal.js'
-import { columns, cards, getCardsForColumn, addColumn } from '../store.js'
+import { columns, getCardsForColumn, addColumn } from '../store.js'
 import { Column } from './Column.js'
 
 /**
@@ -36,10 +36,10 @@ export function Board() {
   // Track rendered columns for proper DOM management
   let renderedColumns = new Map()
 
-  // Use effect to reactively update columns when data changes
+  // Use effect to reactively update columns when column list changes
+  // Note: Card updates are handled by list() within each Column component
   effect(() => {
     const currentColumns = columns()
-    cards() // Read to establish dependency
 
     const currentIds = new Set(currentColumns.map(c => c.id))
 
@@ -53,15 +53,13 @@ export function Board() {
 
     // Add/update columns
     currentColumns.forEach((column, index) => {
-      const columnCards = getCardsForColumn(column.id)()
-
       if (!renderedColumns.has(column.id)) {
-        // New column - create and add
-        const columnElement = Column(column, columnCards, index)
+        // New column - pass the getter so Column can react to card changes
+        const columnElement = Column(column, getCardsForColumn(column.id), index)
         columnsContainer.appendChild(columnElement)
         renderedColumns.set(column.id, columnElement)
       }
-      // Existing columns: the Column component handles its own updates
+      // Existing columns: the Column component handles its own updates via list()
     })
   })
 

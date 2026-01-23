@@ -1,12 +1,6 @@
-import { html } from '../framework/src/core/template.js';
-import { mount } from '../framework/src/core/component.js';
-import { createRouter } from '../framework/src/core/router.js';
-import { Board } from './components/Board.js';
-
-// Create router with routes
-const router = createRouter({
-  '/': () => Board()
-});
+import { html } from '../framework/src/core/template.js'
+import { mount } from '../framework/src/core/component.js'
+import { Board } from './components/Board.js'
 
 // Main App component
 function App() {
@@ -17,10 +11,10 @@ function App() {
       </header>
       ${Board()}
     </div>
-  `;
+  `
 }
 
 // Mount app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  mount(App(), document.getElementById('app'));
-});
+  mount(App(), document.getElementById('app'))
+})

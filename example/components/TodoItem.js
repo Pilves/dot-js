@@ -30,7 +30,7 @@ export function TodoItem(todo) {
   }
 
   return html`
-    <li class="${itemClass}" style="${itemStyle}">
+    <li class="${() => itemClass()}" style="${() => itemStyle()}">
       <label class="todo-label">
         <input
           type="checkbox"

@@ -77,6 +77,43 @@ function isInsideAttribute(html) {
 }
 
 /**
+ * Sanitize CSS values to prevent XSS attacks
+ * @param {string} value - The CSS value to sanitize
+ * @returns {string} - Sanitized CSS value
+ */
+function sanitizeCssValue(value) {
+  if (!value || typeof value !== 'string') {
+    return String(value || '')
+  }
+
+  const trimmed = value.trim().toLowerCase()
+
+  // Block dangerous URL protocols in url() values
+  if (trimmed.includes('url(')) {
+    if (trimmed.includes('javascript:') ||
+        trimmed.includes('data:') ||
+        trimmed.includes('vbscript:')) {
+      console.warn('Blocked potentially unsafe CSS url():', value)
+      return ''
+    }
+  }
+
+  // Block IE-specific XSS vectors
+  if (trimmed.includes('expression(')) {
+    console.warn('Blocked CSS expression():', value)
+    return ''
+  }
+
+  // Block IE behavior property
+  if (trimmed.startsWith('behavior:')) {
+    console.warn('Blocked CSS behavior property:', value)
+    return ''
+  }
+
+  return value
+}
+
+/**
  * convert style object to CSS string
  * @param {Object} styleObj  - { color: "red", fontSize: '14px'}
  * @returns {string} - "color: red; font-size: 14px;"
@@ -88,8 +125,22 @@ function styleObjectToString(styleObj) {
   return Object.entries(styleObj).map(([key, value]) => {
     // Convert camelCase to kebab-case: fontSize -> font-size
     const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase()
-    return `${cssKey}: ${value}`
+
+    // Block behavior property at the key level (IE-specific)
+    if (cssKey === 'behavior') {
+      console.warn('Blocked CSS behavior property')
+      return ''
+    }
+
+    // Sanitize the value
+    const sanitizedValue = sanitizeCssValue(String(value))
+    if (!sanitizedValue) {
+      return '' // Skip this property if value was blocked
+    }
+
+    return `${cssKey}: ${sanitizedValue}`
   })
+  .filter(prop => prop !== '') // Remove empty properties
   .join('; ')
 }
 

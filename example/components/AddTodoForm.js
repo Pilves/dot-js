@@ -76,7 +76,7 @@ export function AddTodoForm() {
         <button type="submit" class="add-btn">Add</button>
       </div>
       <div class="error-message">
-        ${error}
+        ${() => error()}
       </div>
     </form>
   `

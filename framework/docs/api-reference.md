@@ -260,7 +260,7 @@ const [age, setAge] = signal(0)
 html`<input type="number" ...${bindNumber([age, setAge])} />`
 ```
 
-Automatically parses to number. Returns 0 for invalid input.
+Automatically parses to number. Ignores invalid input (keeps previous value).
 
 **Returns:** `{ value, oninput }`
 
@@ -294,9 +294,9 @@ Validate non-empty string.
 ```js
 import { required } from './core/form.js'
 
-required('')        // "error"
+required('')        // "This field is required"
 required('hello')   // null
-required('   ')     // "error" (whitespace only)
+required('   ')     // "This field is required" (whitespace only)
 ```
 
 **Returns:** `null` if valid, error string if invalid
@@ -310,7 +310,7 @@ Validate minimum length.
 ```js
 import { minLength } from './core/form.js'
 
-minLength('ab', 3)   // "value is too short"
+minLength('ab', 3)   // "Must be at least 3 characters"
 minLength('abc', 3)  // null
 ```
 
@@ -325,7 +325,7 @@ Validate maximum length.
 ```js
 import { maxLength } from './core/form.js'
 
-maxLength('abcd', 3)  // "value is too long"
+maxLength('abcd', 3)  // "Must be at most 3 characters"
 maxLength('abc', 3)   // null
 ```
 
@@ -340,8 +340,8 @@ Validate email format.
 ```js
 import { email } from './core/form.js'
 
-email('test')           // "you need to have an @"
-email('test@')          // "you need to have domain ending"
+email('test')           // "Please enter a valid email address"
+email('test@')          // "Please enter a valid email address"
 email('test@mail.com')  // null
 ```
 
@@ -351,73 +351,99 @@ email('test@mail.com')  // null
 
 ## HTTP
 
-### get(url)
+### http.get(url)
 
 Fetch and parse JSON.
 
 ```js
-import { get } from './core/http.js'
+import { http } from './core/http.js'
 
-const users = await get('/api/users')
+const users = await http.get('/api/users')
 ```
 
 **Returns:** `Promise<any>`
 
 ---
 
-### post(url, data)
+### http.post(url, data)
 
 POST JSON data.
 
 ```js
-import { post } from './core/http.js'
+import { http } from './core/http.js'
 
-const created = await post('/api/users', { name: 'John' })
+const created = await http.post('/api/users', { name: 'John' })
 ```
 
 **Returns:** `Promise<any>`
 
 ---
 
-### put(url, data)
+### http.put(url, data)
 
 PUT JSON data.
 
 ```js
-import { put } from './core/http.js'
+import { http } from './core/http.js'
 
-const updated = await put('/api/users/1', { name: 'Jane' })
+const updated = await http.put('/api/users/1', { name: 'Jane' })
 ```
 
 **Returns:** `Promise<any>`
 
 ---
 
-### patch(url, data)
+### http.patch(url, data)
 
 PATCH JSON data (partial update).
 
 ```js
-import { patch } from './core/http.js'
+import { http } from './core/http.js'
 
-const updated = await patch('/api/users/1', { name: 'Jane' })
+const updated = await http.patch('/api/users/1', { name: 'Jane' })
 ```
 
 **Returns:** `Promise<any>`
 
 ---
 
-### del(url)
+### http.delete(url)
 
 DELETE request.
 
 ```js
-import { del } from './core/http.js'
+import { http } from './core/http.js'
 
-await del('/api/users/1')
+await http.delete('/api/users/1')
 ```
 
 **Returns:** `Promise<any>`
+
+---
+
+### HttpError
+
+Custom error class thrown for non-2xx HTTP responses.
+
+```js
+import { HttpError } from './core/http.js'
+
+try {
+  await http.get('/api/users')
+} catch (err) {
+  if (err instanceof HttpError) {
+    console.log(err.status)      // HTTP status code
+    console.log(err.statusText)  // Status text
+    console.log(err.body)        // Response body
+  }
+}
+```
+
+**Properties:**
+- `status` - HTTP status code
+- `statusText` - HTTP status text
+- `response` - Original fetch Response object
+- `body` - Parsed response body
 
 ---
 
@@ -428,15 +454,22 @@ Reactive async state.
 ```js
 import { useAsync } from './core/http.js'
 
-const { data, loading, error } = useAsync(() => get('/api/users'))
+const { data, loading, error, refetch } = useAsync(() => http.get('/api/users'))
 
 // in template
 if (loading()) return html`<p>loading...</p>`
 if (error()) return html`<p>${error().message}</p>`
 return html`<ul>${() => data().map(u => html`<li>${u.name}</li>`)}</ul>`
+
+// refetch data manually
+refetch()
 ```
 
-**Returns:** `{ data, loading, error }` - all are signal getters
+**Returns:** `{ data, loading, error, refetch }`
+- `data` - signal getter for response data
+- `loading` - signal getter for loading state
+- `error` - signal getter for error state
+- `refetch` - function to re-run the async operation
 
 ---
 
@@ -511,3 +544,42 @@ createVirtualList({
 - `scrollToIndex(index)` - scroll to specific item
 - `getVisibleRange()` - get `{ startIndex, endIndex }`
 - `refresh()` - force re-render
+
+---
+
+## UTILITIES
+
+### generateId()
+
+Generate a unique identifier.
+
+```js
+import { generateId } from './core/utils.js'
+
+const id = generateId() // "l8x9y2k4p5q"
+```
+
+Combines timestamp and random string for uniqueness.
+
+**Returns:** `string` - unique identifier
+
+---
+
+### conditionalClass(base, active, condition)
+
+Conditionally apply CSS classes.
+
+```js
+import { conditionalClass } from './core/utils.js'
+
+const [isActive, setIsActive] = signal(false)
+
+html`<div class=${conditionalClass('btn', 'btn-active', isActive)}>click</div>`
+```
+
+**Parameters:**
+- `base` - base class name (always applied)
+- `active` - class to add when condition is true
+- `condition` - boolean or getter function
+
+**Returns:** `() => string` - getter function returning class string

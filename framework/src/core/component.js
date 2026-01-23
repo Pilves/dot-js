@@ -9,7 +9,7 @@
  *  2. append element to the container
  */
 export function mount(element, container) {
-  container.innerHTML = ""
+  container.replaceChildren()
   container.appendChild(element)
 }
 
@@ -22,5 +22,5 @@ export function mount(element, container) {
  *  - clears the container
  */
 export function unmount(container) {
-  container.innerHTML = ""
+  container.replaceChildren()
 }

@@ -219,7 +219,7 @@ Multiple pages. One app.
 import { signal } from './framework/src/core/signal.js'
 import { html } from './framework/src/core/template.js'
 import { mount } from './framework/src/core/component.js'
-import { createRouter, navigate } from './framework/src/core/router.js'
+import { createRouter } from './framework/src/core/router.js'
 
 function Home() {
   return html`<h1>home</h1>`
@@ -252,7 +252,10 @@ function App() {
       <a href="#/user/1">user 1</a>
     </nav>
     <main>
-      ${() => router.component()}
+      ${() => {
+        const route = router.current()
+        return route ? route.component(route.params) : html`<div>404</div>`
+      }}
     </main>
   `
 }
@@ -271,10 +274,10 @@ Async operations. Loading states. Error handling.
 ```js
 import { html } from './framework/src/core/template.js'
 import { mount } from './framework/src/core/component.js'
-import { get, useAsync } from './framework/src/core/http.js'
+import { http, useAsync } from './framework/src/core/http.js'
 
 function UserList() {
-  const { data, loading, error } = useAsync(() => get('/api/users'))
+  const { data, loading, error } = useAsync(() => http.get('/api/users'))
 
   return html`
     <div>

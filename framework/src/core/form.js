@@ -1,5 +1,3 @@
-import { signal } from './signal.js'
-
 /**
  * Two-way binding for text inputs
  * @param {[() => string, (v: string) => void]} signalPair - [getter, setter] from signal()
@@ -90,10 +88,10 @@ export function handleForm(callback) {
  * @returns {string|null} - Error message or null if valid
  */
 export function required(value) {
-  if (value.trim()) {
-    return null
+  if (value == null || !value.trim()) {
+    return "This field is required"
   }
-  return "This field is required"
+  return null
 }
 
 /**
@@ -103,7 +101,7 @@ export function required(value) {
  * @returns {string|null} - Error message or null if valid
  */
 export function minLength(value, min) {
-  if (value.trim().length < min) {
+  if (value == null || value.trim().length < min) {
     return `Must be at least ${min} characters`
   }
   return null
@@ -116,7 +114,7 @@ export function minLength(value, min) {
  * @returns {string|null} - Error message or null if valid
  */
 export function maxLength(value, max) {
-  if (value.trim().length > max) {
+  if (value == null || value.trim().length > max) {
     return `Must be at most ${max} characters`
   }
   return null
@@ -128,6 +126,9 @@ export function maxLength(value, max) {
  * @returns {string|null} - Error message or null if valid
  */
 export function email(value) {
+  if (value == null) {
+    return "Please enter a valid email address"
+  }
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(value.trim())) {
     return "Please enter a valid email address"

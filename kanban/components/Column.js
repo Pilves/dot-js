@@ -3,6 +3,7 @@
  * Displays a column with title, cards, and add card form
  */
 import { html } from '../../framework/src/core/template.js'
+import { list } from '../../framework/src/core/list.js'
 import { Card } from './Card.js'
 import { AddCardForm } from './AddCardForm.js'
 import { deleteColumn, moveCard } from '../store.js'
@@ -10,10 +11,10 @@ import { deleteColumn, moveCard } from '../store.js'
 /**
  * Kanban column component
  * @param {Object} column - { id, title }
- * @param {Array} cards - Array of card objects for this column
+ * @param {Function} getCards - Computed getter returning array of card objects for this column
  * @param {number} columnIndex - Index of the column (used to prevent deletion of first 3 default columns)
  */
-export function Column(column, cards, columnIndex) {
+export function Column(column, getCards, columnIndex) {
   // Only allow deletion of non-default columns (index >= 3)
   const canDelete = columnIndex >= 3
 
@@ -36,10 +37,8 @@ export function Column(column, cards, columnIndex) {
     }
   }
 
-  // Render cards for this column
-  const renderCards = () => {
-    return cards.map(card => Card(card))
-  }
+  // Render cards for this column using framework's reactive list
+  const cardsList = list(getCards, card => card.id, Card)
 
   return html`
     <div class="column">
@@ -60,7 +59,7 @@ export function Column(column, cards, columnIndex) {
         ondragover="${handleDragOver}"
         ondrop="${handleDrop}"
       >
-        ${renderCards()}
+        ${cardsList}
       </div>
       ${AddCardForm(column.id)}
     </div>
