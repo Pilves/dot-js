@@ -150,32 +150,36 @@ unmount(document.getElementById('root'))
 Create a hash-based router.
 
 ```js
-import { createRouter, navigate } from './core/router.js'
+import { createRouter } from './core/router.js'
 
 const router = createRouter({
   '/': HomePage,
   '/user/:id': UserPage,
   '*': NotFound
 })
+
+router.navigate('/path') // navigate is on the router instance
 ```
 
 **Returns:**
 ```js
 {
-  path,      // signal: current path
-  params,    // signal: route params object
-  component  // signal: current component
+  current(),   // function: returns { component, params } for current route
+  navigate(path, query),  // function: navigate to path with optional query params
+  matchRoute(pattern, path), // function: match a path against pattern
+  destroy()    // function: remove hashchange listener
 }
 ```
 
 ---
 
-### navigate(path)
+### router.navigate(path, query)
 
 Navigate programmatically.
 
 ```js
-navigate('/user/123')
+router.navigate('/user/123')
+router.navigate('/search', { q: 'test' }) // with query params
 ```
 
 ---
@@ -383,6 +387,20 @@ PUT JSON data.
 import { put } from './core/http.js'
 
 const updated = await put('/api/users/1', { name: 'Jane' })
+```
+
+**Returns:** `Promise<any>`
+
+---
+
+### patch(url, data)
+
+PATCH JSON data (partial update).
+
+```js
+import { patch } from './core/http.js'
+
+const updated = await patch('/api/users/1', { name: 'Jane' })
 ```
 
 **Returns:** `Promise<any>`

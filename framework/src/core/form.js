@@ -62,7 +62,9 @@ export function bindNumber([get, set]) {
     value: () => get(),
     oninput: (e) => {
       const num = parseFloat(e.target.value)
-      set(isNaN(num) ? 0 : num)
+      if (!isNaN(num)) {
+        set(num)
+      }
     }
   }
 }

@@ -38,11 +38,11 @@ export function html(strings, ...values) {
   strings.forEach((str, i) => {
     htmlString += str
     if (i < values.length) {
-      //check if its an attribute
+      // Check if it's an attribute
       const isInAttribute = isInsideAttribute(htmlString)
 
       if (isInAttribute) {
-        //use string marker for attributes
+        // Use string marker for attributes
         htmlString += `__dot_${markerId}_attr_${i}__`
       } else {
         // comment marker for content
@@ -51,15 +51,14 @@ export function html(strings, ...values) {
     }
   })
 
-  //create  template element to parse html
+  // Create template element to parse HTML
   const template = document.createElement("template")
   template.innerHTML = htmlString.trim()
 
-
-  //return content
+  // Return content
   const content = template.content.cloneNode(true)
 
-  //find  and replace markers with combined TreeWalker
+  // Find and replace markers with combined TreeWalker
   processMarkersAndAttributes(content, values, markerId)
 
   // return one element or fragment
@@ -70,10 +69,10 @@ export function html(strings, ...values) {
 }
 
 function isInsideAttribute(html) {
-  //find last < and >
+  // Find last < and >
   const lastOpen = html.lastIndexOf('<');
   const lastClose = html.lastIndexOf('>');
-  // attribute if <came after >
+  // Attribute if < came after >
   return lastOpen > lastClose
 }
 
@@ -86,10 +85,10 @@ function styleObjectToString(styleObj) {
   if (!styleObj || typeof styleObj !== 'object') {
     return String(styleObj || '')
   }
-  return  Object.entries(styleObj).map(([key, value]) => {
-    //convert camelCase to kebab-case: fontSize -> font-size
+  return Object.entries(styleObj).map(([key, value]) => {
+    // Convert camelCase to kebab-case: fontSize -> font-size
     const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase()
-    return `${cssKey}:  ${value}`
+    return `${cssKey}: ${value}`
   })
   .join('; ')
 }
@@ -140,7 +139,7 @@ function processMarkersAndAttributes(root, values, markerId) {
       for (const { attr, index } of attrsToProcess) {
         const value = values[index]
 
-        //check if its an event attribute
+        // Check if it's an event handler
         if (attr.name.startsWith("on")) {
           // Type check: event handlers must be functions
           if (typeof value !== 'function') {
@@ -148,22 +147,22 @@ function processMarkersAndAttributes(root, values, markerId) {
             element.removeAttribute(attr.name)
             continue
           }
-          // get  event name
+          // Get event name
           const eventName = attr.name.slice(2);
-          //add the real event listener
+          // Add the real event listener
           element.addEventListener(eventName, value)
-          //remove placeholder
+          // Remove placeholder
           element.removeAttribute(attr.name)
         } else if (attr.name === 'style') {
           element.removeAttribute(attr.name)
-          //reactive  style binding
+          // Reactive style binding
           if (typeof value === "function") {
             effect(() => {
               const result = value()
               element.setAttribute("style", styleObjectToString(result))
             })
           } else {
-            //static style object
+            // Static style object
             element.setAttribute("style", styleObjectToString(value))
           }
         } else if (URL_ATTRS.includes(attr.name)) {
@@ -196,8 +195,8 @@ function processMarkersAndAttributes(root, values, markerId) {
             // If falsy, attribute stays removed
           }
         } else {
-          //regular attribute
-          //remove placeholder
+          // Regular attribute
+          // Remove placeholder
           element.removeAttribute(attr.name)
           if (typeof value === "function") {
             // update attribute when signal changes
@@ -221,10 +220,10 @@ function processMarkersAndAttributes(root, values, markerId) {
 }
 
 /**
- * replace marker with   content
+ * Replace marker with content
  */
-function replaceMarker(markerNode,  value) {
-  const parent  = markerNode.parentNode
+function replaceMarker(markerNode, value) {
+  const parent = markerNode.parentNode
 
   if (typeof value === "function") {
     // create text node && bind to effect
@@ -234,7 +233,7 @@ function replaceMarker(markerNode,  value) {
     //effect to update node when signal changes
     effect(() => {
       const result = value()
-      textNode.textContent = result == null ? "" :  String(result)
+      textNode.textContent = result == null ? "" : String(result)
     })
   } else if (value instanceof Node) {
     // if DOM node - add

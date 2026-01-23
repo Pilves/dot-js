@@ -74,7 +74,7 @@ export function addCard(columnId, title, description = '') {
  * @param {string} toColumnId - The destination column
  * @param {number} toIndex - The index position in the destination column
  */
-export function moveCard(cardId, toColumnId, toIndex) {
+export function moveCard(cardId, toColumnId, toIndex = 0) {
   const currentCards = cards()
   const card = currentCards[cardId]
 

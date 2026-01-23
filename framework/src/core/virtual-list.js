@@ -27,17 +27,16 @@ export function createVirtualList(options) {
   // Track scroll position reactively
   const [scrollTop, setScrollTop] = signal(0);
 
-  // Throttle scroll handler for performance
-  let scrollTimeout = null;
-  const throttleMs = 16; // ~60fps
+  // Throttle scroll handler using requestAnimationFrame for smoother scrolling
+  let rafId = null;
 
   function handleScroll(event) {
-    if (scrollTimeout) return;
+    if (rafId) return;
 
-    scrollTimeout = setTimeout(() => {
-      scrollTimeout = null;
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
       setScrollTop(event.target.scrollTop);
-    }, throttleMs);
+    });
   }
 
   // Compute total height of all items
@@ -96,8 +95,6 @@ export function createVirtualList(options) {
 
   // Cache for rendered DOM nodes to enable reuse
   let renderedNodes = new Map(); // key: index, value: { node, item }
-  let currentStartIndex = -1;
-  let currentEndIndex = -1;
 
   // Effect to update rendered items when range or items change
   effect(() => {
@@ -119,12 +116,6 @@ export function createVirtualList(options) {
         node.parentNode.removeChild(node);
       }
       renderedNodes.delete(index);
-    }
-
-    // Pool of removed nodes for potential reuse
-    const nodePool = [];
-    for (const index of indicesToRemove) {
-      // Nodes already removed above, just track for potential reuse pattern
     }
 
     // Render items in visible range
@@ -176,9 +167,6 @@ export function createVirtualList(options) {
       // Cache the node
       renderedNodes.set(i, { node: wrapper, item });
     }
-
-    currentStartIndex = startIndex;
-    currentEndIndex = endIndex;
   });
 
   // Expose some utility methods on the container
@@ -193,6 +181,13 @@ export function createVirtualList(options) {
     refresh() {
       // Force re-render by triggering scroll update
       setScrollTop(container.scrollTop);
+    },
+    destroy() {
+      // Remove scroll listener to prevent memory leaks
+      container.removeEventListener("scroll", handleScroll);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
     }
   };
 

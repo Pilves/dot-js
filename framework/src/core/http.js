@@ -69,79 +69,38 @@ async function processResponse(response) {
 }
 
 /**
- * HTTP GET request
- * @param {string} url - Request URL
- * @param {Object} options - Fetch options
- * @returns {Promise<any>} - Response data
+ * Internal request helper
  */
+function _request(method, url, body = null, options = {}) {
+  const merged = mergeOptions(options)
+  const config = {
+    method,
+    ...merged
+  }
+  if (body !== null) {
+    config.body = JSON.stringify(body)
+  }
+  return fetch(url, config).then(processResponse)
+}
+
 export function get(url, options = {}) {
-  const merged = mergeOptions(options)
-  return fetch(url, {
-    method: 'GET',
-    ...merged
-  }).then(processResponse)
+  return _request('GET', url, null, options)
 }
 
-/**
- * HTTP POST request
- * @param {string} url - Request URL
- * @param {any} body - Request body (will be JSON stringified)
- * @param {Object} options - Fetch options
- * @returns {Promise<any>} - Response data
- */
 export function post(url, body, options = {}) {
-  const merged = mergeOptions(options)
-  return fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(body),
-    ...merged
-  }).then(processResponse)
+  return _request('POST', url, body, options)
 }
 
-/**
- * HTTP PUT request
- * @param {string} url - Request URL
- * @param {any} body - Request body (will be JSON stringified)
- * @param {Object} options - Fetch options
- * @returns {Promise<any>} - Response data
- */
 export function put(url, body, options = {}) {
-  const merged = mergeOptions(options)
-  return fetch(url, {
-    method: 'PUT',
-    body: JSON.stringify(body),
-    ...merged
-  }).then(processResponse)
+  return _request('PUT', url, body, options)
 }
 
-/**
- * HTTP PATCH request
- * @param {string} url - Request URL
- * @param {any} body - Request body (will be JSON stringified)
- * @param {Object} options - Fetch options
- * @returns {Promise<any>} - Response data
- */
 export function patch(url, body, options = {}) {
-  const merged = mergeOptions(options)
-  return fetch(url, {
-    method: 'PATCH',
-    body: JSON.stringify(body),
-    ...merged
-  }).then(processResponse)
+  return _request('PATCH', url, body, options)
 }
 
-/**
- * HTTP DELETE request
- * @param {string} url - Request URL
- * @param {Object} options - Fetch options
- * @returns {Promise<any>} - Response data
- */
 function del(url, options = {}) {
-  const merged = mergeOptions(options)
-  return fetch(url, {
-    method: 'DELETE',
-    ...merged
-  }).then(processResponse)
+  return _request('DELETE', url, null, options)
 }
 
 // Export delete as 'del' since 'delete' is reserved keyword

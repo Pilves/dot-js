@@ -1,13 +1,13 @@
 // Barrel export file for the framework public API
 
 // Reactive primitives
-export { signal, effect, computed } from './core/signal.js'
+export { signal, effect, computed, createPersistedSignal } from './core/signal.js'
 
 // Template system
 export { html } from './core/template.js'
 
 // Component mounting
-export { mount } from './core/component.js'
+export { mount, unmount } from './core/component.js'
 
 // Router
 export { createRouter } from './core/router.js'
@@ -34,3 +34,6 @@ export { list, each } from './core/list.js'
 
 // Virtual list for efficient rendering of large lists
 export { createVirtualList } from './core/virtual-list.js'
+
+// Utilities
+export { generateId, conditionalClass } from './core/utils.js'

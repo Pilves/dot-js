@@ -33,24 +33,35 @@ export function Board() {
     }
   })
 
-  // Use effect to reactively re-render columns when data changes
+  // Track rendered columns for proper DOM management
+  let renderedColumns = new Map()
+
+  // Use effect to reactively update columns when data changes
   effect(() => {
-    // Read signals to establish dependencies
     const currentColumns = columns()
-    // Also read cards to re-render when cards change
-    cards()
+    cards() // Read to establish dependency
 
-    // Clear existing columns
-    columnsContainer.innerHTML = ''
+    const currentIds = new Set(currentColumns.map(c => c.id))
 
-    // Render each column
+    // Remove columns that no longer exist
+    for (const [id, element] of renderedColumns) {
+      if (!currentIds.has(id)) {
+        element.remove()
+        renderedColumns.delete(id)
+      }
+    }
+
+    // Add/update columns
     currentColumns.forEach((column, index) => {
-      // Get cards for this column using computed signal
       const columnCards = getCardsForColumn(column.id)()
 
-      // Create column component and append to container
-      const columnElement = Column(column, columnCards, index)
-      columnsContainer.appendChild(columnElement)
+      if (!renderedColumns.has(column.id)) {
+        // New column - create and add
+        const columnElement = Column(column, columnCards, index)
+        columnsContainer.appendChild(columnElement)
+        renderedColumns.set(column.id, columnElement)
+      }
+      // Existing columns: the Column component handles its own updates
     })
   })
 

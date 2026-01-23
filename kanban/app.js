@@ -1,7 +1,6 @@
 import { html } from '../framework/src/core/template.js';
 import { mount } from '../framework/src/core/component.js';
 import { createRouter } from '../framework/src/core/router.js';
-import { effect } from '../framework/src/core/signal.js';
 import { Board } from './components/Board.js';
 
 // Create router with routes

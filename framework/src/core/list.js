@@ -111,7 +111,7 @@ export function list(signalOrArray, keyFn, renderFn) {
 
     // Set up effect for future updates
     // Effect runs immediately, so we use isFirstRun to skip the initial run
-    effect(() => {
+    const dispose = effect(() => {
       // Read the signal to establish tracking/subscription
       const items = signalOrArray();
 
@@ -124,6 +124,9 @@ export function list(signalOrArray, keyFn, renderFn) {
       // Reconcile on subsequent changes
       reconcile(items);
     });
+
+    // Attach dispose method to result fragment for cleanup
+    result.dispose = dispose;
   } else {
     // Static array: just render once
     const items = Array.isArray(signalOrArray) ? signalOrArray : [];

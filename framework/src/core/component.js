@@ -12,3 +12,15 @@ export function mount(element, container) {
   container.innerHTML = ""
   container.appendChild(element)
 }
+
+/**
+ * unmount(container)
+ *
+ * @param {HTMLElement} container - target container element
+ *
+ * Behavior:
+ *  - clears the container
+ */
+export function unmount(container) {
+  container.innerHTML = ""
+}
