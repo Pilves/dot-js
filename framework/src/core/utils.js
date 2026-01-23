@@ -1,9 +1,27 @@
 /**
+ * Counter for generating unique IDs within same millisecond
+ */
+let idCounter = 0
+let lastTimestamp = 0
+
+/**
  * Generate a unique ID
+ * Uses timestamp + counter + random to ensure uniqueness even in rapid succession
  * @returns {string} - Unique identifier
  */
 export function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 11)
+  const timestamp = Date.now()
+
+  // Reset counter if we're in a new millisecond
+  if (timestamp !== lastTimestamp) {
+    idCounter = 0
+    lastTimestamp = timestamp
+  }
+
+  // Increment counter for same-millisecond calls
+  idCounter++
+
+  return timestamp.toString(36) + idCounter.toString(36) + Math.random().toString(36).slice(2, 7)
 }
 
 /**

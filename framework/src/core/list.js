@@ -46,11 +46,10 @@ export function list(signalOrArray, keyFn, renderFn) {
       const key = newKeys[i];
 
       if (keyToNode.has(key)) {
-        // Reuse existing node
+        // Reuse existing node - the renderFn should use signals internally
+        // for reactivity within the item
         const entry = keyToNode.get(key);
         newKeyToNode.set(key, entry);
-        // Update item reference (in case item data changed but key is same)
-        entry.item = item;
       } else {
         // Create new node
         const node = renderFn(item, i);

@@ -186,14 +186,19 @@ export function createPersistedSignal(key, defaultValue) {
   // Create the underlying signal with loaded value
   const [read, write] = signal(loadInitialValue())
 
+  // Track value internally to avoid subscription when using updater functions
+  let currentValue = loadInitialValue()
+
   /**
    * Wrapped setter that also persists to localStorage
    * Accepts either a value or an updater function
    */
   function persistedWrite(newValue) {
-    // Get the current value for updater functions
-    const currentValue = read()
+    // Compute next value without triggering subscription
     const nextValue = typeof newValue === "function" ? newValue(currentValue) : newValue
+
+    // Update internal tracking
+    currentValue = nextValue
 
     // Save to storage before updating signal
     saveToStorage(nextValue)

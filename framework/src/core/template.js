@@ -145,6 +145,102 @@ function styleObjectToString(styleObj) {
 }
 
 /**
+ * Apply a single attribute to an element with proper handling for special cases
+ * @param {HTMLElement} element - The element to apply the attribute to
+ * @param {string} name - Attribute name
+ * @param {any} value - Attribute value
+ */
+function applyAttribute(element, name, value) {
+  // Event handler
+  if (name.startsWith('on')) {
+    if (typeof value === 'function') {
+      const eventName = name.slice(2)
+      element.addEventListener(eventName, value)
+    }
+    return
+  }
+
+  // Style attribute
+  if (name === 'style') {
+    if (typeof value === 'function') {
+      effect(() => {
+        element.setAttribute('style', styleObjectToString(value()))
+      })
+    } else {
+      element.setAttribute('style', styleObjectToString(value))
+    }
+    return
+  }
+
+  // URL attributes
+  if (URL_ATTRS.includes(name)) {
+    if (typeof value === 'function') {
+      effect(() => {
+        element.setAttribute(name, sanitizeUrl(value()))
+      })
+    } else {
+      element.setAttribute(name, sanitizeUrl(value))
+    }
+    return
+  }
+
+  // Boolean attributes
+  if (BOOLEAN_ATTRS.includes(name)) {
+    if (typeof value === 'function') {
+      effect(() => {
+        if (value()) {
+          element.setAttribute(name, '')
+        } else {
+          element.removeAttribute(name)
+        }
+      })
+    } else {
+      if (value) {
+        element.setAttribute(name, '')
+      }
+    }
+    return
+  }
+
+  // Form element value property
+  if (name === 'value' && (element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA')) {
+    if (typeof value === 'function') {
+      effect(() => {
+        const newVal = value() ?? ''
+        // Only update if different to preserve cursor position
+        if (element.value !== String(newVal)) {
+          element.value = newVal
+        }
+      })
+    } else {
+      element.value = value ?? ''
+    }
+    return
+  }
+
+  // Checkbox/radio checked property (must use property, not attribute for reactivity)
+  if (name === 'checked' && element.tagName === 'INPUT') {
+    if (typeof value === 'function') {
+      effect(() => {
+        element.checked = !!value()
+      })
+    } else {
+      element.checked = !!value
+    }
+    return
+  }
+
+  // Regular attribute
+  if (typeof value === 'function') {
+    effect(() => {
+      element.setAttribute(name, value())
+    })
+  } else {
+    element.setAttribute(name, value)
+  }
+}
+
+/**
  * Combined TreeWalker for processing both comment markers and attributes
  * @param {Node} root - Root node to traverse
  * @param {Array} values - Template values
@@ -178,11 +274,31 @@ function processMarkersAndAttributes(root, values, markerId) {
 
       // Collect attributes to process (iterate backwards to safely remove)
       const attrsToProcess = []
+      const spreadAttrsToProcess = []
       for (let i = 0; i < element.attributes.length; i++) {
         const attr = element.attributes[i]
-        const match = attr.value.match(attrPattern)
-        if (match) {
-          attrsToProcess.push({ attr, index: parseInt(match[1]) })
+        // Check if marker is in attribute VALUE (e.g., class="${...}")
+        const valueMatch = attr.value.match(attrPattern)
+        if (valueMatch) {
+          attrsToProcess.push({ attr, index: parseInt(valueMatch[1]) })
+        }
+        // Check if marker is the attribute NAME (e.g., ${bind(...)}) - object spread
+        const nameMatch = attr.name.match(attrPattern)
+        if (nameMatch) {
+          spreadAttrsToProcess.push({ attr, index: parseInt(nameMatch[1]) })
+        }
+      }
+
+      // Process object spreads first (e.g., ${bind([signal, setSignal])})
+      for (const { attr, index } of spreadAttrsToProcess) {
+        const value = values[index]
+        element.removeAttribute(attr.name)
+
+        if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Node)) {
+          // Spread object properties as attributes
+          for (const [propName, propValue] of Object.entries(value)) {
+            applyAttribute(element, propName, propValue)
+          }
         }
       }
 
@@ -227,6 +343,16 @@ function processMarkersAndAttributes(root, values, markerId) {
           } else {
             element.setAttribute(attr.name, sanitizeUrl(value))
           }
+        } else if (attr.name === 'checked' && element.tagName === 'INPUT') {
+          // Checkbox/radio checked - use property for reactivity
+          element.removeAttribute(attr.name)
+          if (typeof value === "function") {
+            effect(() => {
+              element.checked = !!value()
+            })
+          } else {
+            element.checked = !!value
+          }
         } else if (BOOLEAN_ATTRS.includes(attr.name)) {
           // Boolean attribute - presence means true, absence means false
           element.removeAttribute(attr.name)
@@ -244,6 +370,20 @@ function processMarkersAndAttributes(root, values, markerId) {
               element.setAttribute(attr.name, '')
             }
             // If falsy, attribute stays removed
+          }
+        } else if (attr.name === 'value' && (element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA')) {
+          // Form element value - use property, not attribute
+          element.removeAttribute(attr.name)
+          if (typeof value === "function") {
+            effect(() => {
+              const result = value() ?? ''
+              // Only update if different to preserve cursor position
+              if (element.value !== String(result)) {
+                element.value = result
+              }
+            })
+          } else {
+            element.value = value ?? ''
           }
         } else {
           // Regular attribute
@@ -277,14 +417,43 @@ function replaceMarker(markerNode, value) {
   const parent = markerNode.parentNode
 
   if (typeof value === "function") {
-    // create text node && bind to effect
-    const textNode = document.createTextNode("")
-    parent.replaceChild(textNode, markerNode)
+    // Create a placeholder for reactive content
+    let currentNode = document.createTextNode("")
+    parent.replaceChild(currentNode, markerNode)
 
-    //effect to update node when signal changes
+    // Effect to update node when signal changes
     effect(() => {
       const result = value()
-      textNode.textContent = result == null ? "" : String(result)
+      let newNode
+
+      if (result instanceof Node) {
+        // Result is a DOM node - use it directly
+        newNode = result
+      } else if (Array.isArray(result)) {
+        // Result is an array - create fragment
+        newNode = document.createDocumentFragment()
+        result.forEach((item) => {
+          if (item instanceof Node) {
+            newNode.appendChild(item)
+          } else {
+            newNode.appendChild(document.createTextNode(String(item ?? '')))
+          }
+        })
+        // Fragment needs a wrapper to be replaceable
+        const wrapper = document.createElement('span')
+        wrapper.appendChild(newNode)
+        newNode = wrapper
+      } else {
+        // Result is text - create text node
+        newNode = document.createTextNode(result == null ? "" : String(result))
+      }
+
+      // Replace current node with new content (use currentNode.parentNode to get actual parent)
+      const actualParent = currentNode.parentNode
+      if (actualParent) {
+        actualParent.replaceChild(newNode, currentNode)
+        currentNode = newNode
+      }
     })
   } else if (value instanceof Node) {
     // if DOM node - add

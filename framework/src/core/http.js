@@ -108,25 +108,51 @@ export { del as delete }
 
 /**
  * Reactive async state helper that integrates with the signal system
- * @param {() => Promise<any>} asyncFn - Async function to execute
- * @returns {Object} - { data, loading, error, refetch }
+ * @param {(signal: AbortSignal) => Promise<any>} asyncFn - Async function to execute (receives AbortSignal)
+ * @returns {Object} - { data, loading, error, refetch, abort }
  */
 export function useAsync(asyncFn) {
   const [data, setData] = signal(null)
   const [loading, setLoading] = signal(true)
   const [error, setError] = signal(null)
 
+  let abortController = null
+  let isCancelled = false
+
   async function execute() {
+    // Abort any pending request
+    if (abortController) {
+      abortController.abort()
+    }
+    abortController = new AbortController()
+    const currentController = abortController
+
     setLoading(true)
     setError(null)
 
     try {
-      const result = await asyncFn()
-      setData(result)
+      const result = await asyncFn(currentController.signal)
+      // Only update state if this request wasn't aborted
+      if (!currentController.signal.aborted && !isCancelled) {
+        setData(result)
+      }
     } catch (err) {
-      setError(err)
+      // Ignore abort errors, they're expected
+      if (err.name === 'AbortError') return
+      if (!currentController.signal.aborted && !isCancelled) {
+        setError(err)
+      }
     } finally {
-      setLoading(false)
+      if (!currentController.signal.aborted && !isCancelled) {
+        setLoading(false)
+      }
+    }
+  }
+
+  function abort() {
+    isCancelled = true
+    if (abortController) {
+      abortController.abort()
     }
   }
 
@@ -137,7 +163,8 @@ export function useAsync(asyncFn) {
     data,
     loading,
     error,
-    refetch: execute
+    refetch: execute,
+    abort
   }
 }
 
