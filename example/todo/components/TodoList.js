@@ -1,7 +1,7 @@
-import { html } from '../../framework/src/core/template.js'
+import { html } from '../../../framework/src/core/template.js'
 import { filteredTodos } from '../store.js'
 import { TodoItem } from './TodoItem.js'
-import { list } from '../../framework/src/core/list.js'
+import { list } from '../../../framework/src/core/list.js'
 
 export function TodoList() {
   // Check if there are any todos to show

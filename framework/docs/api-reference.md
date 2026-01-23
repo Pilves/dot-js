@@ -36,7 +36,18 @@ effect(() => {
 
 The function runs immediately, then again whenever any signal it read changes.
 
-**Returns:** `undefined`
+**Returns:** `() => void` - Dispose function to stop the effect
+
+To clean up and stop the effect from running:
+
+```js
+const dispose = effect(() => {
+  console.log('count is', count())
+})
+
+// later, to stop the effect:
+dispose()
+```
 
 ---
 
@@ -112,6 +123,102 @@ html`<ul>${items.map(i => html`<li>${i}</li>`)}</ul>`
 ```
 
 **Returns:** `Node` or `DocumentFragment`
+
+---
+
+## EVENT HANDLING
+
+Bind events with `on*` attributes.
+
+### Common Events
+
+```js
+// click
+html`<button onclick=${() => doSomething()}>click me</button>`
+
+// input (fires on every keystroke)
+html`<input oninput=${e => setText(e.target.value)} />`
+
+// change (fires on blur or enter)
+html`<input onchange=${e => save(e.target.value)} />`
+
+// submit
+html`<form onsubmit=${handleSubmit}>...</form>`
+
+// keyboard
+html`<input onkeydown=${e => handleKey(e)} />`
+
+// focus/blur
+html`<input onfocus=${() => setFocused(true)} onblur=${() => setFocused(false)} />`
+
+// mouse
+html`<div onmouseenter=${showTooltip} onmouseleave=${hideTooltip}>hover</div>`
+```
+
+### Accessing the Event
+
+The event object is passed to your handler.
+
+```js
+function handleInput(e) {
+  const value = e.target.value   // the input's current value
+  const element = e.target       // the DOM element
+  setText(value)
+}
+
+html`<input oninput=${handleInput} />`
+```
+
+### Preventing Default
+
+Stop the browser's default behavior.
+
+```js
+function handleSubmit(e) {
+  e.preventDefault()  // stop form from reloading page
+  const data = new FormData(e.target)
+  save(data)
+}
+
+html`<form onsubmit=${handleSubmit}>
+  <input name="email" />
+  <button type="submit">send</button>
+</form>`
+```
+
+### Stop Propagation
+
+Prevent event from bubbling up.
+
+```js
+function handleInnerClick(e) {
+  e.stopPropagation()  // parent's onclick won't fire
+  doInnerThing()
+}
+
+html`
+  <div onclick=${() => console.log('outer')}>
+    <button onclick=${handleInnerClick}>inner</button>
+  </div>
+`
+```
+
+### Keyboard Events
+
+Check which key was pressed.
+
+```js
+function handleKeydown(e) {
+  if (e.key === 'Enter') {
+    submit()
+  }
+  if (e.key === 'Escape') {
+    cancel()
+  }
+}
+
+html`<input onkeydown=${handleKeydown} />`
+```
 
 ---
 
@@ -544,6 +651,85 @@ createVirtualList({
 - `scrollToIndex(index)` - scroll to specific item
 - `getVisibleRange()` - get `{ startIndex, endIndex }`
 - `refresh()` - force re-render
+
+---
+
+## EVENT DELEGATION
+
+### delegate(selector, handler)
+
+Create a delegated event handler for child elements.
+
+```js
+import { delegate } from './core/events.js'
+
+const [todos, setTodos] = signal([
+  { id: 1, text: 'Task 1' },
+  { id: 2, text: 'Task 2' }
+])
+
+html`<ul onclick=${delegate('li', (e, target) => {
+  console.log('Clicked:', target.textContent)
+})}>
+  ${() => todos().map(todo => html`<li data-id=${todo.id}>${todo.text}</li>`)}
+</ul>`
+```
+
+Instead of adding event listeners to each child element, add a single listener to the parent. When a child is clicked, the handler receives both the event and the matched element.
+
+**Parameters:**
+- `selector` - CSS selector to match target elements
+- `handler(e, target)` - Event handler called with event and matched element
+
+**Returns:** `Function` - Delegated event handler
+
+**Use when:**
+- Handling events on dynamically added elements
+- Many similar elements need the same handler
+- Reducing memory by using fewer event listeners
+
+---
+
+### delegateAll(handlers)
+
+Create multiple delegated handlers for a single parent.
+
+```js
+import { delegateAll } from './core/events.js'
+
+const handleTodoActions = delegateAll({
+  '.edit-btn': (e, target) => {
+    const id = target.closest('[data-id]').dataset.id
+    editTodo(id)
+  },
+  '.delete-btn': (e, target) => {
+    const id = target.closest('[data-id]').dataset.id
+    deleteTodo(id)
+  },
+  '.complete-btn': (e, target) => {
+    const id = target.closest('[data-id]').dataset.id
+    toggleComplete(id)
+  }
+})
+
+html`<ul onclick=${handleTodoActions}>
+  ${() => todos().map(todo => html`
+    <li data-id=${todo.id}>
+      ${todo.text}
+      <button class="edit-btn">Edit</button>
+      <button class="delete-btn">Delete</button>
+      <button class="complete-btn">Done</button>
+    </li>
+  `)}
+</ul>`
+```
+
+Handles multiple different child selectors with a single parent listener. First matching selector wins.
+
+**Parameters:**
+- `handlers` - Object mapping selectors to handler functions
+
+**Returns:** `Function` - Combined delegated event handler
 
 ---
 

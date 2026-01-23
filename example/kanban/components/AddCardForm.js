@@ -2,8 +2,8 @@
  * AddCardForm component
  * A collapsible form for adding new cards to a Kanban column
  */
-import { html } from '../../framework/src/core/template.js'
-import { signal } from '../../framework/src/core/signal.js'
+import { html } from '../../../framework/src/core/template.js'
+import { signal } from '../../../framework/src/core/signal.js'
 import { addCard } from '../store.js'
 
 /**

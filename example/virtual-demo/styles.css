@@ -1,0 +1,205 @@
+/**
+ * Virtual Scrolling Demo Styles
+ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+/* App Container */
+.app-container {
+  max-width: 600px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 1.8rem;
+  font-weight: 300;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Controls Section */
+.controls {
+  padding: 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #eee;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stat {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.stat strong {
+  color: #333;
+}
+
+.range,
+.rendered-count {
+  font-family: 'Monaco', 'Consolas', monospace;
+  background: #e9ecef;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #667eea;
+}
+
+/* Scroll To Form */
+.scroll-to-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scroll-to-form label {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.scroll-to-form input {
+  width: 100px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.scroll-to-form input:focus {
+  border-color: #667eea;
+}
+
+.scroll-to-form button {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.scroll-to-form button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* List Container */
+.list-container {
+  padding: 20px;
+}
+
+/* Virtual List Styling */
+.virtual-list-container {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+/* Item Content */
+.item-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  height: 100%;
+  border-bottom: 1px solid #f0f0f0;
+  background: white;
+}
+
+.item-content:hover {
+  background: #f9f9fa;
+}
+
+.item-index {
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 0.8rem;
+  color: #999;
+  min-width: 50px;
+}
+
+.item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item-title {
+  font-weight: 500;
+  color: #333;
+}
+
+.item-description {
+  font-size: 0.85rem;
+  color: #777;
+}
+
+/* Footer */
+.footer {
+  padding: 16px 20px;
+  background: #f8f9fa;
+  border-top: 1px solid #eee;
+  text-align: center;
+}
+
+.footer p {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  body {
+    padding: 20px 10px;
+  }
+
+  .header {
+    padding: 20px;
+  }
+
+  .header h1 {
+    font-size: 1.4rem;
+  }
+
+  .stats {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .scroll-to-form {
+    flex-wrap: wrap;
+  }
+}

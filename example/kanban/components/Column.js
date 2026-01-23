@@ -2,8 +2,8 @@
  * Column component for Kanban board
  * Displays a column with title, cards, and add card form
  */
-import { html } from '../../framework/src/core/template.js'
-import { list } from '../../framework/src/core/list.js'
+import { html } from '../../../framework/src/core/template.js'
+import { list } from '../../../framework/src/core/list.js'
 import { Card } from './Card.js'
 import { AddCardForm } from './AddCardForm.js'
 import { deleteColumn, moveCard } from '../store.js'

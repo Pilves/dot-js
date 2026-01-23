@@ -1,4 +1,4 @@
-import { signal, computed, createPersistedSignal } from '../framework/src/core/signal.js'
+import { signal, computed, createPersistedSignal } from '../../framework/src/core/signal.js'
 
 /**
  * Generate a unique ID for cards and columns

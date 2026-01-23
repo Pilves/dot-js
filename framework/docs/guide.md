@@ -4,6 +4,54 @@ Build something real. Learn by doing.
 
 ---
 
+## INSTALLATION
+
+Get the framework into your project.
+
+**Option 1: Copy the core folder**
+
+```
+your-project/
+  framework/
+    src/
+      core/
+        signal.js
+        template.js
+        component.js
+        router.js
+        http.js
+        form.js
+        list.js
+        virtual-list.js
+        utils.js
+  app.js
+  index.html
+```
+
+**Option 2: Clone the repo**
+
+```bash
+git clone https://github.com/user/dot-js.git
+```
+
+**Import structure:**
+
+```js
+// from your app.js
+import { signal } from './framework/src/core/signal.js'
+import { html } from './framework/src/core/template.js'
+import { mount } from './framework/src/core/component.js'
+```
+
+Each module is a single file. Import what you need.
+
+**Browser requirements:**
+
+- ES modules support (all modern browsers)
+- No build step. No bundler. Just `<script type="module">`.
+
+---
+
 ## SETUP
 
 Create an HTML file. Add a script tag. Done.
@@ -51,6 +99,64 @@ mount(Counter(), document.getElementById('root'))
 Run it. Click buttons. Watch numbers change.
 
 Notice: `${() => count()}` wraps the signal in a function. This makes it reactive. Without the arrow function, it would only show the initial value.
+
+---
+
+## CONDITIONAL RENDERING
+
+Show or hide things based on state.
+
+**Pattern 1: Logical AND**
+
+Render only if condition is truthy.
+
+```js
+const [loggedIn, setLoggedIn] = signal(false)
+
+html`
+  <div>
+    ${() => loggedIn() && html`<p>welcome back</p>`}
+  </div>
+`
+```
+
+**Pattern 2: Ternary**
+
+Choose between two options.
+
+```js
+const [loading, setLoading] = signal(true)
+
+html`
+  <div>
+    ${() => loading()
+      ? html`<p>loading...</p>`
+      : html`<p>done</p>`
+    }
+  </div>
+`
+```
+
+**Pattern 3: conditionalClass**
+
+Toggle classes based on state.
+
+```js
+import { conditionalClass } from './framework/src/core/utils.js'
+
+const [active, setActive] = signal(false)
+
+html`
+  <button
+    class=${conditionalClass('btn', 'btn-active', active)}
+    onclick=${() => setActive(a => !a)}
+  >
+    toggle
+  </button>
+`
+```
+
+Always `btn`. Adds `btn-active` when `active()` is true.
 
 ---
 
@@ -405,6 +511,163 @@ mount(BigList(), document.getElementById('root'))
 ```
 
 Only renders what you see. Scroll through thousands. Stay smooth.
+
+---
+
+## EVENT DELEGATION
+
+Handle events from many child elements with a single parent listener.
+
+### Why delegate?
+
+Without delegation, you attach listeners to every child. With delegation, one listener on the parent handles all children. This is faster and cleaner when you have many similar elements.
+
+### Basic delegation
+
+```js
+import { signal } from './framework/src/core/signal.js'
+import { html } from './framework/src/core/template.js'
+import { mount } from './framework/src/core/component.js'
+import { delegate } from './framework/src/core/events.js'
+
+function TodoApp() {
+  const [todos, setTodos] = signal([
+    { id: 1, text: 'Learn dot.js', completed: false },
+    { id: 2, text: 'Build app', completed: false },
+    { id: 3, text: 'Ship it', completed: false }
+  ])
+
+  function toggleTodo(id) {
+    setTodos(list => list.map(t =>
+      t.id === id ? { ...t, completed: !t.completed } : t
+    ))
+  }
+
+  return html`
+    <div>
+      <h1>todos</h1>
+      <ul onclick=${delegate('li', (e, target) => {
+        const id = Number(target.dataset.id)
+        toggleTodo(id)
+      })}>
+        ${() => todos().map(todo => html`
+          <li
+            data-id=${todo.id}
+            class=${todo.completed ? 'completed' : ''}
+          >
+            ${todo.text}
+          </li>
+        `)}
+      </ul>
+    </div>
+  `
+}
+
+mount(TodoApp(), document.getElementById('root'))
+```
+
+One `onclick` on the `<ul>`. Handles clicks on all `<li>` elements. Even ones added later.
+
+### Multiple actions
+
+Use `delegateAll` when you need different actions for different buttons.
+
+```js
+import { signal } from './framework/src/core/signal.js'
+import { html } from './framework/src/core/template.js'
+import { mount } from './framework/src/core/component.js'
+import { delegateAll } from './framework/src/core/events.js'
+
+function TaskManager() {
+  const [tasks, setTasks] = signal([
+    { id: 1, text: 'Design UI', editing: false },
+    { id: 2, text: 'Write code', editing: false }
+  ])
+
+  function editTask(id) {
+    setTasks(list => list.map(t =>
+      t.id === id ? { ...t, editing: true } : t
+    ))
+  }
+
+  function deleteTask(id) {
+    setTasks(list => list.filter(t => t.id !== id))
+  }
+
+  function completeTask(id) {
+    setTasks(list => list.map(t =>
+      t.id === id ? { ...t, completed: true } : t
+    ))
+  }
+
+  const handleActions = delegateAll({
+    '.edit-btn': (e, target) => {
+      const id = Number(target.closest('[data-id]').dataset.id)
+      editTask(id)
+    },
+    '.delete-btn': (e, target) => {
+      const id = Number(target.closest('[data-id]').dataset.id)
+      deleteTask(id)
+    },
+    '.complete-btn': (e, target) => {
+      const id = Number(target.closest('[data-id]').dataset.id)
+      completeTask(id)
+    }
+  })
+
+  return html`
+    <div>
+      <h1>task manager</h1>
+      <div class="task-list" onclick=${handleActions}>
+        ${() => tasks().map(task => html`
+          <div class="task" data-id=${task.id}>
+            <span>${task.text}</span>
+            <button class="edit-btn">edit</button>
+            <button class="complete-btn">done</button>
+            <button class="delete-btn">delete</button>
+          </div>
+        `)}
+      </div>
+    </div>
+  `
+}
+
+mount(TaskManager(), document.getElementById('root'))
+```
+
+One listener. Multiple selectors. Clean code.
+
+### Tips
+
+Use `target.dataset` to pass data from markup to handlers.
+
+```js
+html`<button class="action-btn" data-id=${item.id} data-action="approve">
+  approve
+</button>`
+
+delegate('.action-btn', (e, target) => {
+  const id = target.dataset.id
+  const action = target.dataset.action
+  handleAction(id, action)
+})
+```
+
+Use `target.closest()` to find parent elements when you click nested content.
+
+```js
+html`<div class="card" data-id=${card.id}>
+  <h3>${card.title}</h3>
+  <p>${card.description}</p>
+  <button>view</button>
+</div>`
+
+delegate('.card', (e, target) => {
+  // works even if you click the h3, p, or button
+  const id = target.dataset.id
+  openCard(id)
+})
+```
 
 ---
 

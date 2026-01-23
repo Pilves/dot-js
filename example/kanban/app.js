@@ -1,5 +1,5 @@
-import { html } from '../framework/src/core/template.js'
-import { mount } from '../framework/src/core/component.js'
+import { html } from '../../framework/src/core/template.js'
+import { mount } from '../../framework/src/core/component.js'
 import { Board } from './components/Board.js'
 
 // Main App component

@@ -2,7 +2,7 @@
  * Header component
  * Demonstrates: html template, computed values for display
  */
-import { html } from '../../framework/src/core/template.js'
+import { html } from '../../../framework/src/core/template.js'
 import { activeCount, totalCount } from '../store.js'
 
 export function Header() {

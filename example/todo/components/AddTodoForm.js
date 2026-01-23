@@ -2,9 +2,9 @@
  * AddTodoForm component
  * Demonstrates: form binding, validation, handleForm
  */
-import { html } from '../../framework/src/core/template.js'
-import { signal } from '../../framework/src/core/signal.js'
-import { bind, handleForm, required, minLength } from '../../framework/src/core/form.js'
+import { html } from '../../../framework/src/core/template.js'
+import { signal } from '../../../framework/src/core/signal.js'
+import { bind, handleForm, required, minLength, maxLength } from '../../../framework/src/core/form.js'
 import { addTodo } from '../store.js'
 
 export function AddTodoForm() {
@@ -29,6 +29,12 @@ export function AddTodoForm() {
     const minLengthError = minLength(value, 3)
     if (minLengthError) {
       return 'Todo must be at least 3 characters'
+    }
+
+    // Check maximum length
+    const maxLengthError = maxLength(value, 100)
+    if (maxLengthError) {
+      return 'Todo must be at most 100 characters'
     }
 
     return null

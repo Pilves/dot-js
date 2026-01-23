@@ -2,8 +2,8 @@
  * Board component for Kanban board
  * Displays all columns in a horizontal row with reactive updates
  */
-import { html } from '../../framework/src/core/template.js'
-import { effect } from '../../framework/src/core/signal.js'
+import { html } from '../../../framework/src/core/template.js'
+import { effect } from '../../../framework/src/core/signal.js'
 import { columns, getCardsForColumn, addColumn } from '../store.js'
 import { Column } from './Column.js'
 

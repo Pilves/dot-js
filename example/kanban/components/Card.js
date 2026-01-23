@@ -1,4 +1,4 @@
-import { html } from '../../framework/src/core/template.js'
+import { html } from '../../../framework/src/core/template.js'
 import { deleteCard } from '../store.js'
 
 /**

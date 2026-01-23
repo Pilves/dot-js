@@ -35,5 +35,8 @@ export { list, each } from './core/list.js'
 // Virtual list for efficient rendering of large lists
 export { createVirtualList } from './core/virtual-list.js'
 
+// Event delegation
+export { delegate, delegateAll } from './core/events.js'
+
 // Utilities
 export { generateId, conditionalClass } from './core/utils.js'

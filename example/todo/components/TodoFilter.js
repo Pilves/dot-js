@@ -2,7 +2,7 @@
  * TodoFilter component
  * Demonstrates: router navigation, conditional styling
  */
-import { html } from '../../framework/src/core/template.js'
+import { html } from '../../../framework/src/core/template.js'
 import { filter, activeCount, completedCount, clearCompleted } from '../store.js'
 
 /**
