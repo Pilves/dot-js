@@ -63,7 +63,7 @@ export function AddTodoForm() {
   const inputClass = () => error() ? 'todo-input error' : 'todo-input'
 
   return html`
-    <form class="add-todo-form" ${formHandler}>
+    <form class="add-todo-form" onsubmit="${formHandler.onsubmit}">
       <div class="input-group">
         <input
           type="text"

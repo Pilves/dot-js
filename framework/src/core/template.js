@@ -5,6 +5,7 @@ import { effect } from "./signal.js";
  */
 const SAFE_URL_PROTOCOLS = ['http:', 'https:', 'mailto:', 'tel:']
 const URL_ATTRS = ['href', 'src', 'action', 'formaction', 'xlink:href']
+const BOOLEAN_ATTRS = ['checked', 'disabled', 'selected', 'readonly', 'required', 'multiple', 'autofocus', 'hidden', 'open']
 
 /**
  * Sanitize URLs to prevent javascript: and data: protocol attacks
@@ -175,6 +176,24 @@ function processMarkersAndAttributes(root, values, markerId) {
             })
           } else {
             element.setAttribute(attr.name, sanitizeUrl(value))
+          }
+        } else if (BOOLEAN_ATTRS.includes(attr.name)) {
+          // Boolean attribute - presence means true, absence means false
+          element.removeAttribute(attr.name)
+          if (typeof value === "function") {
+            effect(() => {
+              const result = value()
+              if (result) {
+                element.setAttribute(attr.name, '')
+              } else {
+                element.removeAttribute(attr.name)
+              }
+            })
+          } else {
+            if (value) {
+              element.setAttribute(attr.name, '')
+            }
+            // If falsy, attribute stays removed
           }
         } else {
           //regular attribute
